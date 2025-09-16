@@ -16,6 +16,11 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
+  <!-- Flash message for successful reservation -->
+  <div id="flash-message" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded shadow-lg text-lg font-semibold hidden">
+    Reservation successful!
+  </div>
+
   <div class="min-h-screen flex flex-col items-center justify-center p-4">
     <header class="w-full max-w-4xl text-center mb-8">
       <h1 class="text-4xl font-bold text-gray-900">Railway Reservation System</h1>
@@ -77,6 +82,7 @@
       const confirmation = document.getElementById('confirmation');
       const backToSearchBtn = document.getElementById('back-to-search');
       const newBookingBtn = document.getElementById('new-booking');
+      const flashMessage = document.getElementById('flash-message');
       
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('date').setAttribute('min', today);
@@ -158,6 +164,14 @@
         });
       }
       
+      function showFlashMessage(message) {
+        flashMessage.textContent = message;
+        flashMessage.classList.remove('hidden');
+        setTimeout(() => {
+          flashMessage.classList.add('hidden');
+        }, 2500);
+      }
+
       function handleBooking(event) {
           const button = event.currentTarget;
           const train = JSON.parse(button.dataset.trainDetails);
@@ -177,6 +191,7 @@
           
           searchResults.classList.add('hidden');
           confirmation.classList.remove('hidden');
+          showFlashMessage('Reservation successful!');
       }
 
        backToSearchBtn.addEventListener('click', () => {
@@ -194,3 +209,4 @@
   </script>
 </body>
 </html>
+
