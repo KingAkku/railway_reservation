@@ -9,8 +9,8 @@ const port = 3000;
 // --- Database Connection Configuration ---
 const dbConfig = {
     host: 'localhost',
-    user: 'adminuser',
-    password: 'adminuser1234',
+    user: 'root',
+    password: 'YourNewPassword',
     database: 'railway_reservation'
 };
 
