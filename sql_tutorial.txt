@@ -1,0 +1,18 @@
+# IN SQL SHELL
+
+Step 1 : \connect root@localhost
+		pass : YourNewPassword
+
+Step 2 : \source "C:\Works\railway_reservation\database.sql"
+
+Step 3 : SELECT * FROM User_Data;
+
+
+
+# IN TERMINAL
+
+(if node not working) =>  Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+1, cd C:\Works\railway_reservation
+
+2, node server.js
