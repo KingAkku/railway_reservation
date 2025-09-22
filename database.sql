@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS railway_reservation;
 
-CREATE USER 'adminuser'@'localhost' IDENTIFIED BY 'adminuser1234';
-GRANT ALL PRIVILEGES ON railway_reservation.* TO 'adminuser'@'localhost';
+CREATE USER 'root'@'localhost' IDENTIFIED BY 'YourNewPassword';
+GRANT ALL PRIVILEGES ON railway_reservation.* TO 'root'@'localhost';
 FLUSH PRIVILEGES;
 
 USE railway_reservation;
