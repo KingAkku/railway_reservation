@@ -3,6 +3,10 @@
 Step 1 : \connect root@localhost
 		pass : YourNewPassword
 
+		\sql (if not first time)
+
+		DROP DATABASE IF EXISTS railway_reservation; (if not first time)
+
 Step 2 : \source "C:\Works\railway_reservation\database.sql"
 
 Step 3 : SELECT * FROM User_Data;
