@@ -26,6 +26,18 @@ CREATE TABLE IF NOT EXISTS availability (
     FOREIGN KEY (train_no) REFERENCES trains(train_no)
 );
 
+CREATE TABLE IF NOT EXISTS User_Data (
+    booking_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_name VARCHAR(100) NOT NULL,
+    user_email VARCHAR(100) NOT NULL,
+    user_phone VARCHAR(15),
+    train_no INT NOT NULL,
+    journey_date DATE NOT NULL,
+    class_type VARCHAR(50) NOT NULL,
+    booking_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (train_no) REFERENCES trains(train_no)
+);
+
 INSERT INTO trains (train_no, train_name, from_station, to_station, departure_time, arrival_time, duration) VALUES
 (12951, 'Rajdhani Express', 'Mumbai', 'New Delhi', '17:00:00', '08:32:00', '15h 32m'),
 (12001, 'Shatabdi Express', 'New Delhi', 'Mumbai', '06:00:00', '13:45:00', '7h 45m'),
