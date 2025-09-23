@@ -9,14 +9,34 @@ const port = 3000;
 // --- Database Connection Configuration ---
 const dbConfig = {
     host: 'localhost',
-    user: 'root',
-    password: 'YourNewPassword',
+    user: 'adminuser',
+    password: 'adminuser1234',
     database: 'railway_reservation'
 };
 
 // --- Middleware ---
-// This is new! It allows our server to read JSON data from request bodies.
 app.use(express.json());
+
+// --- NEW! API Endpoint to Fetch All Unique Locations ---
+app.get('/api/locations', async (req, res) => {
+    try {
+        const connection = await mysql.createConnection(dbConfig);
+        // This query gets a single, sorted list of all unique station names
+        const sql = `
+            (SELECT from_station AS station_name FROM trains)
+            UNION
+            (SELECT to_station AS station_name FROM trains)
+            ORDER BY station_name ASC;
+        `;
+        const [rows] = await connection.execute(sql);
+        const locations = rows.map(row => row.station_name);
+        res.json(locations);
+        await connection.end();
+    } catch (error) {
+        console.error('Database error fetching locations:', error);
+        res.status(500).json({ error: 'Failed to fetch locations.' });
+    }
+});
 
 // --- API Endpoint to Fetch Trains ---
 app.get('/api/trains', async (req, res) => {
@@ -53,16 +73,13 @@ app.get('/api/trains', async (req, res) => {
     }
 });
 
-// --- NEW! API Endpoint to Handle Bookings ---
+// --- API Endpoint to Handle Bookings ---
 app.post('/api/book', async (req, res) => {
-    // Get booking details from the request body
+    // ... (This function remains unchanged)
     const { userName, userEmail, userPhone, trainNo, journeyDate, classType } = req.body;
-
-    // Basic validation
     if (!userName || !userEmail || !trainNo || !journeyDate || !classType) {
         return res.status(400).json({ success: false, message: 'Missing required booking information.' });
     }
-
     try {
         const connection = await mysql.createConnection(dbConfig);
         const sql = `
@@ -70,16 +87,10 @@ app.post('/api/book', async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?)
         `;
         const [result] = await connection.execute(sql, [userName, userEmail, userPhone, trainNo, journeyDate, classType]);
-        
         await connection.end();
-
-        // Send a success response back to the frontend
         res.status(201).json({ 
-            success: true, 
-            message: 'Booking confirmed!', 
-            bookingId: result.insertId 
+            success: true, message: 'Booking confirmed!', bookingId: result.insertId 
         });
-
     } catch (error) {
         console.error('Booking error:', error);
         res.status(500).json({ success: false, message: 'Failed to save booking.' });
