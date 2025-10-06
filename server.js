@@ -40,19 +40,29 @@ app.get('/api/locations', async (req, res) => {
 
 // --- API Endpoint to Fetch Trains ---
 app.get('/api/trains', async (req, res) => {
-    // ... (This function remains unchanged)
     const { from, to, date, class: journeyClass } = req.query;
     if (!from || !to || !date || !journeyClass) {
         return res.status(400).json({ error: 'Missing required search parameters.' });
     }
     try {
         const connection = await mysql.createConnection(dbConfig);
-        const sql = `
-            SELECT t.train_no, t.train_name, t.departure_time, t.arrival_time, t.duration, a.status
-            FROM trains t JOIN availability a ON t.train_no = a.train_no
-            WHERE t.from_station = ? AND t.to_station = ? AND a.journey_date = ? AND a.class_type = ?
-        `;
-        const [rows] = await connection.execute(sql, [from, to, date, journeyClass]);
+        let sql, params;
+        if (journeyClass === "All") {
+            sql = `
+                SELECT t.train_no, t.train_name, t.departure_time, t.arrival_time, t.duration, a.class_type, a.status
+                FROM trains t JOIN availability a ON t.train_no = a.train_no
+                WHERE t.from_station = ? AND t.to_station = ? AND a.journey_date = ?
+            `;
+            params = [from, to, date];
+        } else {
+            sql = `
+                SELECT t.train_no, t.train_name, t.departure_time, t.arrival_time, t.duration, a.class_type, a.status
+                FROM trains t JOIN availability a ON t.train_no = a.train_no
+                WHERE t.from_station = ? AND t.to_station = ? AND a.journey_date = ? AND a.class_type = ?
+            `;
+            params = [from, to, date, journeyClass];
+        }
+        const [rows] = await connection.execute(sql, params);
         const formattedTrains = rows.map(row => {
             const status = row.status.toLowerCase();
             let availability = "";
@@ -61,8 +71,13 @@ app.get('/api/trains', async (req, res) => {
             else if (status.includes("waitlist")) availability = `Waitlist (${status.split('-')[1] || 0})`;
             else availability = row.status;
             return {
-                no: row.train_no, name: row.train_name, departure: row.departure_time.substring(0, 5),
-                arrival: row.arrival_time.substring(0, 5), duration: row.duration, availability: availability
+                no: row.train_no,
+                name: row.train_name,
+                departure: row.departure_time.substring(0, 5),
+                arrival: row.arrival_time.substring(0, 5),
+                duration: row.duration,
+                class: row.class_type,
+                availability: availability
             };
         });
         res.json(formattedTrains);
