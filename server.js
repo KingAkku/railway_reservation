@@ -1,51 +1,49 @@
-// server.js - Backend for Railway Reservation System
-
 const express = require('express');
 const mysql = require('mysql2/promise');
 const path = require('path');
 const app = express();
 const port = 3000;
 
-// --- Database Connection Configuration ---
-const dbConfig = {
+// --- Use Connection Pool for Performance ---
+const pool = mysql.createPool({
     host: 'localhost',
-    user: 'adminuser',
-    password: 'adminuser1234',
-    database: 'railway_reservation'
-};
+    user: 'root',
+    password: 'YourNewPassword',
+    database: 'railway_reservation',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
 
 // --- Middleware ---
 app.use(express.json());
 
-// --- NEW! API Endpoint to Fetch All Unique Locations ---
+// --- API Endpoint to Get All Station Locations ---
+// This is needed to populate the dropdowns on the frontend.
 app.get('/api/locations', async (req, res) => {
     try {
-        const connection = await mysql.createConnection(dbConfig);
-        // This query gets a single, sorted list of all unique station names
         const sql = `
             (SELECT from_station AS station_name FROM trains)
             UNION
             (SELECT to_station AS station_name FROM trains)
             ORDER BY station_name ASC;
         `;
-        const [rows] = await connection.execute(sql);
+        const [rows] = await pool.execute(sql);
         const locations = rows.map(row => row.station_name);
         res.json(locations);
-        await connection.end();
     } catch (error) {
         console.error('Database error fetching locations:', error);
         res.status(500).json({ error: 'Failed to fetch locations.' });
     }
 });
 
-// --- API Endpoint to Fetch Trains ---
+// --- API Endpoint to Search Trains Only ---
 app.get('/api/trains', async (req, res) => {
     const { from, to, date, class: journeyClass } = req.query;
     if (!from || !to || !date || !journeyClass) {
         return res.status(400).json({ error: 'Missing required search parameters.' });
     }
     try {
-        const connection = await mysql.createConnection(dbConfig);
         let sql, params;
         if (journeyClass === "All") {
             sql = `
@@ -62,7 +60,7 @@ app.get('/api/trains', async (req, res) => {
             `;
             params = [from, to, date, journeyClass];
         }
-        const [rows] = await connection.execute(sql, params);
+        const [rows] = await pool.execute(sql, params);
         const formattedTrains = rows.map(row => {
             const status = row.status.toLowerCase();
             let availability = "";
@@ -81,7 +79,6 @@ app.get('/api/trains', async (req, res) => {
             };
         });
         res.json(formattedTrains);
-        await connection.end();
     } catch (error) {
         console.error('Database error:', error);
         res.status(500).json({ error: 'Failed to fetch data from the database.' });
@@ -90,21 +87,18 @@ app.get('/api/trains', async (req, res) => {
 
 // --- API Endpoint to Handle Bookings ---
 app.post('/api/book', async (req, res) => {
-    // ... (This function remains unchanged)
     const { userName, userEmail, userPhone, trainNo, journeyDate, classType } = req.body;
     if (!userName || !userEmail || !trainNo || !journeyDate || !classType) {
         return res.status(400).json({ success: false, message: 'Missing required booking information.' });
     }
     try {
-        const connection = await mysql.createConnection(dbConfig);
         const sql = `
             INSERT INTO User_Data (user_name, user_email, user_phone, train_no, journey_date, class_type)
             VALUES (?, ?, ?, ?, ?, ?)
         `;
-        const [result] = await connection.execute(sql, [userName, userEmail, userPhone, trainNo, journeyDate, classType]);
-        await connection.end();
-        res.status(201).json({ 
-            success: true, message: 'Booking confirmed!', bookingId: result.insertId 
+        const [result] = await pool.execute(sql, [userName, userEmail, userPhone, trainNo, journeyDate, classType]);
+        res.status(201).json({
+            success: true, message: 'Booking confirmed!', bookingId: result.insertId
         });
     } catch (error) {
         console.error('Booking error:', error);

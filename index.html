@@ -60,7 +60,11 @@
             </div>
         </form>
       </div>
-      <div id="search-results" class="results-container mt-8 hidden">...</div>
+      <div id="search-results" class="results-container mt-8 hidden">
+        <h2 class="text-2xl font-bold text-center mb-6">Available Trains</h2>
+        <div id="trains-list" class="space-y-4">
+        </div>
+      </div>
       <div id="confirmation" class="confirmation-container mt-8 hidden">...</div>
       <div id="booking-modal" class="modal fixed inset-0 hidden">...</div>
     </main>
@@ -75,7 +79,6 @@
       // ... (other element selectors are the same)
       const searchForm = document.getElementById('search-form');
       const searchResults = document.getElementById('search-results');
-      const trainsList = document.getElementById('trains-list');
       const confirmation = document.getElementById('confirmation');
       const bookingModal = document.getElementById('booking-modal');
       // ... (rest of the element selectors are the same)
@@ -139,6 +142,52 @@
           // ... (error handling remains the same)
         }
       });
+
+      // FIX 2: Added the complete displayTrains function
+      function displayTrains(from, to, trains, date, jClass) {
+        const trainsList = document.getElementById('trains-list');
+        trainsList.innerHTML = ''; // Clear previous results
+
+        if (trains.length === 0) {
+            trainsList.innerHTML = `
+                <div class="text-center bg-white p-6 rounded-lg shadow-md">
+                    <p class="text-gray-600">No trains found for the selected route on this date.</p>
+                </div>
+            `;
+            return;
+        }
+
+        trains.forEach(train => {
+            const availabilityClass = train.availability.toLowerCase().includes('available') 
+                ? 'text-green-600' 
+                : 'text-orange-600';
+
+            const trainCard = `
+                <div class="train-card bg-white p-5 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-center">
+                    <div class="flex-grow">
+                        <p class="text-xl font-bold text-gray-900">${train.name} (${train.no})</p>
+                        <div class="flex items-center space-x-4 text-gray-700 mt-2">
+                            <div>
+                                <p class="font-semibold">${train.departure}</p>
+                                <p class="text-sm text-gray-500">${from}</p>
+                            </div>
+                            <div class="text-sm text-gray-400">→ ${train.duration} →</div>
+                            <div>
+                                <p class="font-semibold">${train.arrival}</p>
+                                <p class="text-sm text-gray-500">${to}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-4 md:mt-0 md:ml-6">
+                        <p class="font-semibold text-lg ${availabilityClass}">${train.availability}</p>
+                        <p class="text-sm text-gray-500">${train.class}</p>
+                        <button class="btn mt-2 bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700">Book Now</button>
+                    </div>
+                </div>
+            `;
+            trainsList.insertAdjacentHTML('beforeend', trainCard);
+        });
+      }
     });
   </script>
 </body>
